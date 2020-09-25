@@ -1,4 +1,7 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
+    kotlin("jvm") version "1.4.10"
     `java-library`
     `maven-publish`
     signing
@@ -25,6 +28,10 @@ java {
     withJavadocJar()
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
 
 if(JavaVersion.current() >= JavaVersion.VERSION_1_9) {

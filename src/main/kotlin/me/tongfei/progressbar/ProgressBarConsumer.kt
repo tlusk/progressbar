@@ -1,6 +1,6 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import java.util.function.Consumer;
+import java.util.function.Consumer
 
 /**
  * A consumer that prints a rendered progress bar.
@@ -8,34 +8,31 @@ import java.util.function.Consumer;
  * @author Alex Peelman
  * @author Tongfei Chen
  */
-public interface ProgressBarConsumer extends Consumer<String>, Appendable, AutoCloseable {
-
+interface ProgressBarConsumer : Consumer<String?>, Appendable, AutoCloseable {
     /**
      * Returns the maximum length allowed for the rendered form of a progress bar.
      */
-    int getMaxRenderedLength();
+    val maxRenderedLength: Int
 
     /**
      * Accepts a rendered form of a progress bar, e.g., prints to a specified stream.
      * @param rendered Rendered form of a progress bar, a string
      */
-    void accept(String rendered);
-
-    default ProgressBarConsumer append(CharSequence csq) {
-        accept(csq.toString());
-        return this;
+    override fun accept(rendered: String?)
+    override fun append(csq: CharSequence): ProgressBarConsumer {
+        accept(csq.toString())
+        return this
     }
 
-    default ProgressBarConsumer append(CharSequence csq, int start, int end) {
-        accept(csq.subSequence(start, end).toString());
-        return this;
+    override fun append(csq: CharSequence, start: Int, end: Int): ProgressBarConsumer {
+        accept(csq.subSequence(start, end).toString())
+        return this
     }
 
-    default ProgressBarConsumer append(char c) {
-        accept(String.valueOf(c));
-        return this;
+    override fun append(c: Char): ProgressBarConsumer {
+        accept(c.toString())
+        return this
     }
 
-    void close();
-
+    override fun close()
 }

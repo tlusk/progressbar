@@ -1,42 +1,40 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import org.junit.Test;
+import org.junit.Test
+import java.text.DecimalFormat
 
-import java.text.DecimalFormat;
-
-
-public class SpeedDisplayTest {
+class SpeedDisplayTest {
     @Test
-    public void test() throws InterruptedException {
-        ProgressBar bar = new ProgressBarBuilder()
+    @Throws(InterruptedException::class)
+    fun test() {
+        val bar = ProgressBarBuilder()
                 .showSpeed()
                 .setUnit("k", 1000)
                 .setInitialMax(10000)
-                .build();
-        int x = 0;
+                .build()
+        var x = 0
         while (x < 10000) {
-            bar.step();
-            Thread.sleep(1);
-            x++;
+            bar.step()
+            Thread.sleep(1)
+            x++
         }
-
-        bar.close();
+        bar.close()
     }
 
     @Test
-    public void testSpeedFormat() throws InterruptedException {
-        ProgressBar bar = new ProgressBarBuilder()
-                .showSpeed(new DecimalFormat("#.##"))
+    @Throws(InterruptedException::class)
+    fun testSpeedFormat() {
+        val bar = ProgressBarBuilder()
+                .showSpeed(DecimalFormat("#.##"))
                 .setUnit("k", 1000)
                 .setInitialMax(10000)
-                .build();
-        int x = 0;
+                .build()
+        var x = 0
         while (x < 10000) {
-            bar.step();
-            Thread.sleep(1);
-            x++;
+            bar.step()
+            Thread.sleep(1)
+            x++
         }
-
-        bar.close();
+        bar.close()
     }
 }

@@ -1,24 +1,16 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import org.junit.Test;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.junit.Test
 
 /**
  * @author Tongfei Chen
  */
-public class WrappedIterableTest {
-
+class WrappedIterableTest {
     @Test
-    public void test() throws Exception {
-
-        List<Integer> sizedColl = Stream.iterate(1, x -> x + 1).limit(10000).collect(Collectors.toList());
-
-        for (Integer x : ProgressBar.wrap(sizedColl, "Traverse")) {
-            Thread.sleep(2);
+    fun test() {
+        val sizedColl = generateSequence(1) { it + 1 }.take(10000).toMutableList()
+        for (x in ProgressBar.wrap(sizedColl, "Traverse")) {
+            Thread.sleep(2)
         }
     }
-
 }

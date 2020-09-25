@@ -1,29 +1,26 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Test
+import org.slf4j.LoggerFactory
 
 /**
  * @author Alex Peelman
  */
-public class Slf4jTest {
-
-    //Prints progress as new lines without carriage return
+class Slf4jTest {
+    // Prints progress as new lines without carriage return
     @Test
-    public void printLoggerTest() throws InterruptedException {
-        final Logger logger = LoggerFactory.getLogger("Test");
-        try (ProgressBar pb = new ProgressBarBuilder()
+    fun printLoggerTest() {
+        val logger = LoggerFactory.getLogger("Test")
+        ProgressBarBuilder()
                 .setInitialMax(100)
                 .setTaskName("log.test")
-                .setConsumer(new DelegatingProgressBarConsumer(logger::info))
+                .setConsumer(DelegatingProgressBarConsumer({ logger.info(it) }))
                 .setUpdateIntervalMillis(100)
-                .build()) {
-            for (int i = 0; i < 100; i++) {
-                pb.step();
-                Thread.sleep(100);
-            }
-        }
+                .build().use { pb ->
+                    repeat(100) {
+                        pb.step()
+                        Thread.sleep(100)
+                    }
+                }
     }
-
 }

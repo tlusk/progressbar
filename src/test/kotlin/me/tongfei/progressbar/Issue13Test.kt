@@ -1,40 +1,30 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import org.junit.Test;
+import org.junit.Test
+
+private const val NBR_ELEMENTS = 100
+private const val PROGRESSBAR_GRACE_PERIOD = 1000
 
 /**
  * @author bwittwer
  */
-public class Issue13Test {
+class Issue13Test {
+    @Test
+    fun testOk() {
+        ProgressBar("Test", NBR_ELEMENTS.toLong()).use { pb ->
+            Thread.sleep(PROGRESSBAR_GRACE_PERIOD.toLong())
+            repeat(NBR_ELEMENTS) {
+                pb.step()
+            }
+        }
+    }
 
-	private static final int NBR_ELEMENTS = 100;
-	private static final int PROGRESSBAR_GRACE_PERIOD = 1000;
-
-	@Test
-	public void testOk() {
-		try (ProgressBar pb = new ProgressBar("Test", NBR_ELEMENTS)) {
-
-			try {
-				Thread.sleep(PROGRESSBAR_GRACE_PERIOD);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
-
-			for (int i = 0; i < 100; i++) {
-				pb.step();
-			}
-		}
-	}
-
-	@Test
-	public void testKo() {
-		try (ProgressBar pb = new ProgressBar("Test", NBR_ELEMENTS)) {
-
-			for (int i = 0; i < 100; i++) {
-				pb.step();
-			}
-
-		}
-	}
-
+    @Test
+    fun testKo() {
+        ProgressBar("Test", NBR_ELEMENTS.toLong()).use { pb ->
+            repeat(NBR_ELEMENTS) {
+                pb.step()
+            }
+        }
+    }
 }

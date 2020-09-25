@@ -1,28 +1,24 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
+import java.io.UnsupportedEncodingException
+import java.nio.charset.StandardCharsets
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-public class MockProgressBarBuilder extends ProgressBarBuilder {
-
-    private final ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-    public MockProgressBarBuilder() {
-        try {
-            setConsumer(new InteractiveConsoleProgressBarConsumer(new PrintStream(out, true, UTF_8.name())));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("This should never happen!");
+class MockProgressBarBuilder : ProgressBarBuilder() {
+    private val out = ByteArrayOutputStream()
+    val output: String
+        get() = try {
+            out.toString(StandardCharsets.UTF_8.name())
+        } catch (e: UnsupportedEncodingException) {
+            throw RuntimeException("This should never happen!")
         }
-    }
 
-    public String getOutput() {
+    init {
         try {
-            return out.toString(UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("This should never happen!");
+            setConsumer(InteractiveConsoleProgressBarConsumer(PrintStream(out, true, StandardCharsets.UTF_8.name())))
+        } catch (e: UnsupportedEncodingException) {
+            throw RuntimeException("This should never happen!")
         }
     }
 }

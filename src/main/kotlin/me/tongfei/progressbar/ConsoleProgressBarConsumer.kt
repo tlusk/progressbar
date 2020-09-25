@@ -1,47 +1,32 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import java.io.PrintStream;
+import java.io.PrintStream
 
-import static me.tongfei.progressbar.TerminalUtils.CARRIAGE_RETURN;
+private const val CONSOLE_RIGHT_MARGIN = 2
 
 /**
  * Progress bar consumer that prints the progress bar state to console.
- * By default {@link System#err} is used as {@link PrintStream}.
+ * By default [System.err] is used as [PrintStream].
  *
  * @author Tongfei Chen
  * @author Alex Peelman
  */
-public class ConsoleProgressBarConsumer implements ProgressBarConsumer {
+open class ConsoleProgressBarConsumer @JvmOverloads constructor(
+        val out: PrintStream,
+        private val predefinedMaxLength: Int = -1) : ProgressBarConsumer {
 
-    private static int consoleRightMargin = 2;
-    int predefinedMaxLength = -1;
-    final PrintStream out;
+    override val maxRenderedLength: Int
+        get() = predefinedMaxLength.takeIf { it > 0 } ?: TerminalUtils.terminalWidth - CONSOLE_RIGHT_MARGIN
 
-    public ConsoleProgressBarConsumer(PrintStream out) {
-        this.out = out;
+    override fun accept(rendered: String?) {
+        requireNotNull(rendered)
+
+        val acceptedLength = rendered.length.coerceAtMost(maxRenderedLength)
+        out.print(TerminalUtils.CARRIAGE_RETURN + rendered.take(acceptedLength))
     }
 
-    public ConsoleProgressBarConsumer(PrintStream out, int predefinedMaxLength) {
-        this.predefinedMaxLength = predefinedMaxLength;
-        this.out = out;
-    }
-
-    @Override
-    public int getMaxRenderedLength() {
-        if (predefinedMaxLength <= 0)
-            return TerminalUtils.getTerminalWidth() - consoleRightMargin;
-        else return predefinedMaxLength;
-    }
-
-    @Override
-    public void accept(String str) {
-        int acceptedLength = Math.min(str.length(), getMaxRenderedLength());
-        out.print(CARRIAGE_RETURN + str.substring(0, acceptedLength));
-    }
-
-    @Override
-    public void close() {
-        out.println();
-        out.flush();
+    override fun close() {
+        out.println()
+        out.flush()
     }
 }

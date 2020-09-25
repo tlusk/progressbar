@@ -1,42 +1,37 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Scanner;
+import org.junit.Test
+import java.util.*
 
 /**
  * @author Tongfei Chen
  */
-public class Issue40Test {
-
+class Issue40Test {
     @Test
-    public void test() throws InterruptedException {
-        InputStream input = new ByteArrayInputStream("100 200 300".getBytes());
+    fun test() {
+        val input = "100 200 300".byteInputStream()
 
-        Scanner sc = new Scanner(input);
-        int x = sc.nextInt();
-        try (ProgressBar pb = new ProgressBar("1", x)) {
-            for (int i = 0; i < x; i++) {
-                Thread.sleep(10);
-                pb.step();
+        val sc = Scanner(input)
+        val x = sc.nextInt()
+        ProgressBar("1", x.toLong()).use { pb ->
+            repeat(x) {
+                Thread.sleep(10)
+                pb.step()
             }
         }
-        int y = sc.nextInt();
-        try (ProgressBar pb = new ProgressBar("2", y)) {
-            for (int i = 0; i < y; i++) {
-                Thread.sleep(10);
-                pb.step();
+        val y = sc.nextInt()
+        ProgressBar("2", y.toLong()).use { pb ->
+            repeat(y) {
+                Thread.sleep(10)
+                pb.step()
             }
         }
-        int z = sc.nextInt();
-        try (ProgressBar pb = new ProgressBar("3", z)) {
-            for (int i = 0; i < z; i++) {
-                Thread.sleep(10);
-                pb.step();
+        val z = sc.nextInt()
+        ProgressBar("3", z.toLong()).use { pb ->
+            repeat(z) {
+                Thread.sleep(10)
+                pb.step()
             }
         }
     }
-
 }

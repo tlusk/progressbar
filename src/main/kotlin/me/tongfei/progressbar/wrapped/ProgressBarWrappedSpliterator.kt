@@ -1,86 +1,49 @@
-package me.tongfei.progressbar.wrapped;
+package me.tongfei.progressbar.wrapped
 
-import me.tongfei.progressbar.ProgressBar;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.function.Consumer;
+import me.tongfei.progressbar.ProgressBar
+import java.util.*
+import java.util.function.Consumer
 
 /**
  * @author Tongfei Chen
  * @since 0.7.2
  */
-public class ProgressBarWrappedSpliterator<T> implements Spliterator<T>, AutoCloseable {
+class ProgressBarWrappedSpliterator<T> private constructor(
+        private val underlying: Spliterator<T>,
+        val progressBar: ProgressBar,
+        private val openChildren: MutableSet<Spliterator<T>>)
+    : Spliterator<T> by underlying, AutoCloseable by progressBar {
 
-    private Spliterator<T> underlying;
-    private ProgressBar pb;
-    private Set<Spliterator<T>> openChildren;
+    constructor(underlying: Spliterator<T>, pb: ProgressBar) :
+            this(underlying, pb, Collections.synchronizedSet(HashSet<Spliterator<T>>())) // has to be synchronized
 
-    public ProgressBarWrappedSpliterator(Spliterator<T> underlying, ProgressBar pb) {
-        this(underlying, pb, Collections.synchronizedSet(new HashSet<>())); // has to be synchronized
+    init {
+        openChildren.add(this)
     }
 
-    private ProgressBarWrappedSpliterator(Spliterator<T> underlying, ProgressBar pb, Set<Spliterator<T>> openChildren) {
-        this.underlying = underlying;
-        this.pb = pb;
-        this.openChildren = openChildren;
-        this.openChildren.add(this);
+    private fun registerChild(child: Spliterator<T>) {
+        openChildren.add(child)
     }
 
-    public ProgressBar getProgressBar() {
-        return pb;
-    }
-
-    @Override
-    public void close() {
-        pb.close();
-    }
-
-    private void registerChild(Spliterator<T> child) {
-        openChildren.add(child);
-    }
-
-    private void removeThis() {
-        openChildren.remove(this);
-        if (openChildren.size() == 0) close();
+    private fun removeThis() {
+        openChildren.remove(this)
+        if (openChildren.isEmpty()) close()
         // only closes the progressbar if no spliterator is working anymore
     }
 
-    @Override
-    public boolean tryAdvance(Consumer<? super T> action) {
-        boolean r = underlying.tryAdvance(action);
-        if (r) pb.step();
-        else removeThis();
-        return r;
-    }
-
-    @Override
-    public Spliterator<T> trySplit() {
-        Spliterator<T> u = underlying.trySplit();
-        if (u != null) {
-            ProgressBarWrappedSpliterator<T> child = new ProgressBarWrappedSpliterator<>(u, pb, openChildren);
-            registerChild(child);
-            return child;
+    override fun tryAdvance(action: Consumer<in T>): Boolean {
+        return underlying.tryAdvance(action).also { advanced ->
+            if (advanced) progressBar.step()
+            else removeThis()
         }
-        else return null;
     }
 
-    @Override
-    public long estimateSize() {
-        return underlying.estimateSize();
-    }
+    // if not overridden, may return null since that is the default Spliterator implementation
+    override fun getComparator(): Comparator<in T>? = underlying.comparator
 
-    @Override
-    public int characteristics() {
-        return underlying.characteristics();
+    override fun trySplit(): Spliterator<T>? {
+        return underlying.trySplit()?.let { u ->
+            ProgressBarWrappedSpliterator(u, progressBar, openChildren).also { registerChild(it) }
+        }
     }
-
-    @Override // if not overridden, may return null since that is the default Spliterator implementation
-    public Comparator<? super T> getComparator() {
-        return underlying.getComparator();
-    }
-
 }

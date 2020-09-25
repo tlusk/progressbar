@@ -1,95 +1,72 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import java.io.IOException;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Stream;
-
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.InfoCmp;
+import org.jline.terminal.Terminal
+import org.jline.terminal.TerminalBuilder
+import org.jline.utils.InfoCmp
+import java.io.IOException
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * @author Martin Vehovsky
  * @since 1.0.0
  */
-public class TerminalUtils {
+object TerminalUtils {
+    const val CARRIAGE_RETURN = "\r"
+    @Suppress("MemberVisibilityCanBePrivate")
+    const val ESCAPE_CHAR = "\u001b"
+    @Suppress("MemberVisibilityCanBePrivate")
+    const val DEFAULT_TERMINAL_WIDTH = 80
 
-    static final char CARRIAGE_RETURN = '\r';
-    static final char ESCAPE_CHAR = '\u001b';
-    static final int DEFAULT_TERMINAL_WIDTH = 80;
+    val activeConsumers: Queue<ProgressBarConsumer> = ConcurrentLinkedQueue()
 
-    private static Terminal terminal = null;
-    private static boolean cursorMovementSupported = false;
-
-    static Queue<ProgressBarConsumer> activeConsumers = new ConcurrentLinkedQueue<>();
-
-    synchronized static int getTerminalWidth() {
-        Terminal terminal = getTerminal();
-        int width = terminal.getWidth();
-
+    val terminalWidth: Int
         // Workaround for issue #23 under IntelliJ
-        return (width >= 10) ? width : DEFAULT_TERMINAL_WIDTH;
+        get() = terminal.width.takeIf { it >= 10 } ?: DEFAULT_TERMINAL_WIDTH
+
+    @get:JvmName("hasCursorMovementSupport")
+    val hasCursorMovementSupport: Boolean by lazy {
+        terminal.getStringCapability(InfoCmp.Capability.cursor_up) != null &&
+                terminal.getStringCapability(InfoCmp.Capability.cursor_down) != null
     }
 
-    static boolean hasCursorMovementSupport() {
-        if (terminal == null)
-            terminal = getTerminal();
-        return cursorMovementSupported;
-    }
-
-    synchronized static void closeTerminal() {
+    @Synchronized
+    fun closeTerminal() {
         try {
-            if (terminal != null) {
-                terminal.close();
-                terminal = null;
+            if (lazyTerminal.isInitialized()) {
+                terminal.close()
             }
-        } catch (IOException ignored) { /* noop */ }
+        } catch (ignored: IOException) { /* noop */ }
     }
 
-    static <T extends ProgressBarConsumer> Stream<T> filterActiveConsumers(Class<T> clazz) {
-        return activeConsumers.stream()
+    fun <T : ProgressBarConsumer> filterActiveConsumers(clazz: Class<T>): List<T> {
+        return activeConsumers
                 .filter(clazz::isInstance)
-                .map(clazz::cast);
+                .map(clazz::cast)
     }
 
-    static String moveCursorUp(int count) {
-        return ESCAPE_CHAR + "[" + count + "A" + CARRIAGE_RETURN;
-    }
-
-    static String moveCursorDown(int count) {
-        return ESCAPE_CHAR + "[" + count + "B" + CARRIAGE_RETURN;
-    }
+    fun moveCursorUp(count: Int): String = ESCAPE_CHAR + "[" + count + "A" + CARRIAGE_RETURN
+    fun moveCursorDown(count: Int): String = ESCAPE_CHAR + "[" + count + "B" + CARRIAGE_RETURN
 
     /**
-     * <ul>
-     *     <li>Creating terminal is relatively expensive, usually takes between 5-10ms.
-     *         <ul>
-     *             <li>If updateInterval is set under 10ms creating new terminal for on every re-render of progress bar could be a problem.</li>
-     *             <li>Especially when multiple progress bars are running in parallel.</li>
-     *         </ul>
-     *     </li>
-     *     <li>Another problem with {@link Terminal} is that once created you can create another instance (say from different thread), but this instance will be
-     *     "dumb". Until previously created terminal will be closed.
-     *     </li>
-     * </ul>
+     *  * Creating terminal is relatively expensive, usually takes between 5-10ms.
+     *
+     *  * If updateInterval is set under 10ms creating new terminal for on every re-render of progress bar could be a problem.
+     *  * Especially when multiple progress bars are running in parallel.
+     *
+     *
+     *  * Another problem with [Terminal] is that once created you can create another instance (say from different thread), but this instance will be
+     * "dumb". Until previously created terminal will be closed.
      */
-    static Terminal getTerminal() {
-        if (terminal == null) {
-            try {
-                // Issue #42
-                // Defaulting to a dumb terminal when a supported terminal can not be correctly created
-                // see https://github.com/jline/jline3/issues/291
-                terminal = TerminalBuilder.builder().dumb(true).build();
-                cursorMovementSupported = (
-                        terminal.getStringCapability(InfoCmp.Capability.cursor_up) != null &&
-                        terminal.getStringCapability(InfoCmp.Capability.cursor_down) != null
-                );
-            } catch (IOException e) {
-                throw new RuntimeException("This should never happen! Dumb terminal should have been created.");
-            }
+    private val lazyTerminal: Lazy<Terminal> = lazy {
+        try {
+            // Issue #42
+            // Defaulting to a dumb terminal when a supported terminal can not be correctly created
+            // see https://github.com/jline/jline3/issues/291
+            TerminalBuilder.builder().dumb(true).build()
+        } catch (e: IOException) {
+            throw RuntimeException("This should never happen! Dumb terminal should have been created.")
         }
-        return terminal;
     }
-
+    private val terminal: Terminal by lazyTerminal
 }

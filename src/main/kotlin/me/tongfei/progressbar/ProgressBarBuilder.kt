@@ -1,97 +1,65 @@
-package me.tongfei.progressbar;
+package me.tongfei.progressbar
 
-import java.text.DecimalFormat;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
+import java.text.DecimalFormat
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 /**
- * Builder class for {@link ProgressBar}s.
+ * Builder class for [ProgressBar]s.
  * @author Tongfei Chen
  * @since 0.7.0
  */
-public class ProgressBarBuilder {
+open class ProgressBarBuilder {
+    private var task = ""
+    private var initialMax: Long = -1
+    private var updateIntervalMillis = 1000
+    private var style = ProgressBarStyle.COLORFUL_UNICODE_BLOCK
+    private var consumer: ProgressBarConsumer? = null
+    private var unitName = ""
+    private var unitSize: Long = 1
+    private var showSpeed = false
+    private var speedFormat: DecimalFormat = DecimalFormat("#.0")
+    private var speedUnit = ChronoUnit.SECONDS
+    private var processed: Long = 0
+    private var elapsed = Duration.ZERO
 
-    private String task = "";
-    private long initialMax = -1;
-    private int updateIntervalMillis = 1000;
-    private ProgressBarStyle style = ProgressBarStyle.COLORFUL_UNICODE_BLOCK;
-    private ProgressBarConsumer consumer = null;
-    private String unitName = "";
-    private long unitSize = 1;
-    private boolean showSpeed = false;
-    private DecimalFormat speedFormat;
-    private ChronoUnit speedUnit = ChronoUnit.SECONDS;
-    private long processed = 0;
-    private Duration elapsed = Duration.ZERO;
-
-    public ProgressBarBuilder() { }
-
-    public ProgressBarBuilder setTaskName(String task) {
-        this.task = task;
-        return this;
+    fun setTaskName(task: String) = apply { this.task = task }
+    fun setInitialMax(initialMax: Long) = apply { this.initialMax = initialMax }
+    fun setStyle(style: ProgressBarStyle) = apply { this.style = style }
+    fun setUpdateIntervalMillis(updateIntervalMillis: Int) = apply { this.updateIntervalMillis = updateIntervalMillis }
+    fun setConsumer(consumer: ProgressBarConsumer?) = apply { this.consumer = consumer }
+    fun setUnit(unitName: String, unitSize: Long)= apply {
+        this.unitName = unitName
+        this.unitSize = unitSize
     }
 
-    public ProgressBarBuilder setInitialMax(long initialMax) {
-        this.initialMax = initialMax;
-        return this;
+    @JvmOverloads
+    fun showSpeed(speedFormat: DecimalFormat = DecimalFormat("#.0")) = apply {
+        showSpeed = true
+        this.speedFormat = speedFormat
     }
 
-    public ProgressBarBuilder setStyle(ProgressBarStyle style) {
-        this.style = style;
-        return this;
-    }
-
-    public ProgressBarBuilder setUpdateIntervalMillis(int updateIntervalMillis) {
-        this.updateIntervalMillis = updateIntervalMillis;
-        return this;
-    }
-
-    public ProgressBarBuilder setConsumer(ProgressBarConsumer consumer) {
-        this.consumer = consumer;
-        return this;
-    }
-
-    public ProgressBarBuilder setUnit(String unitName, long unitSize) {
-        this.unitName = unitName;
-        this.unitSize = unitSize;
-        return this;
-    }
-
-    public ProgressBarBuilder showSpeed() {
-        return showSpeed(new DecimalFormat("#.0"));
-    }
-
-    public ProgressBarBuilder showSpeed(DecimalFormat speedFormat) {
-        this.showSpeed = true;
-        this.speedFormat = speedFormat;
-        return this;
-    }
-
-    public ProgressBarBuilder setSpeedUnit(ChronoUnit speedUnit) {
-        this.speedUnit = speedUnit;
-        return this;
-    }
+    fun setSpeedUnit(speedUnit: ChronoUnit) = apply { this.speedUnit = speedUnit }
 
     /**
      * Sets elapsedBeforeStart duration and number of processed units.
      * @param processed amount of processed units
      * @param elapsed duration of
      */
-    public ProgressBarBuilder startsFrom(long processed, Duration elapsed) {
-        this.processed = processed;
-        this.elapsed = elapsed;
-        return this;
+    fun startsFrom(processed: Long, elapsed: Duration) = apply {
+        this.processed = processed
+        this.elapsed = elapsed
     }
 
-    public ProgressBar build() {
-        return new ProgressBar(
+    fun build(): ProgressBar {
+        return ProgressBar(
                 task,
                 initialMax,
                 updateIntervalMillis,
                 processed,
                 elapsed,
-                new DefaultProgressBarRenderer(style, unitName, unitSize, showSpeed, speedFormat,speedUnit),
-                consumer == null ? Util.createConsoleConsumer() : consumer
-        );
+                DefaultProgressBarRenderer(style, unitName, unitSize, showSpeed, speedFormat, speedUnit),
+                consumer ?: Util.createConsoleConsumer()
+        )
     }
 }
